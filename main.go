@@ -21,6 +21,11 @@ func init() {
 }
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("\nPanic due to,", r)
+		}
+	}()
 	fmt.Println("Target :", *targetFile)
 
 	// Parse torrent file
@@ -28,6 +33,9 @@ func main() {
 	if err != nil {
 		fmt.Printf("[ERROR] %s\n", err)
 	}
+
+	var peerId [20]byte
+	copy(peerId[:], []byte("gokul656"))
 
 	bencode.Print()
 }

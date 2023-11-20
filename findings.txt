@@ -1,2 +1,4 @@
 * bufio - buffered i/o
-
+https://blog.jse.li/posts/torrent/
+https://en.wikipedia.org/wiki/Torrent_file#:~:text=Torrent%20files%20are%20normally%20named,torrent%20.&text=A%20torrent%20file%20acts%20like,use%20of%20a%20BitTorrent%20client.
+https://github.com/veggiedefender/torrent-client/blob/master/torrentfile/torrentfile_test.go

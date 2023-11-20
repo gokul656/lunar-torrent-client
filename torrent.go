@@ -1,9 +1,18 @@
 package main
 
 import (
+	"net/http"
 	"net/url"
 	"strconv"
+	"time"
+
+	"github.com/jackpal/bencode-go"
 )
+
+type BencodeTrackerResp struct {
+	Interval int    `bencode:"interval"`
+	Peers    string `bencode:"peers"`
+}
 
 type TorrentFile struct {
 	Announce    string
@@ -14,11 +23,7 @@ type TorrentFile struct {
 	Name        string
 }
 
-func (t *TorrentFile) toTorrentFile() (*TorrentFile, error) {
-	return nil, nil
-}
-
-func (t *TorrentFile) buildTracekerURL(peerID [20]byte, port uint16) (string, error) {
+func (t *TorrentFile) BuildTracekerURL(peerID [20]byte, port uint16) (string, error) {
 	trackerURL, err := url.Parse(t.Announce)
 	if err != nil {
 		return "", err
@@ -36,4 +41,27 @@ func (t *TorrentFile) buildTracekerURL(peerID [20]byte, port uint16) (string, er
 	trackerURL.RawQuery = params.Encode()
 
 	return trackerURL.String(), nil
+}
+
+func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) error {
+	requestUrl, err := t.BuildTracekerURL(peerID, port)
+	if err != nil {
+		panic(err)
+	}
+
+	c := &http.Client{Timeout: 15 * time.Second}
+	resp, err := c.Get(requestUrl)
+	if err != nil {
+		return err
+	}
+
+	trackerResponse := &BencodeTrackerResp{}
+	err = bencode.Unmarshal(resp.Body, trackerResponse)
+	if err != nil {
+		return nil
+	}
+
+	defer resp.Body.Close()
+
+	return nil
 }
