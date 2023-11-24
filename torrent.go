@@ -43,7 +43,7 @@ func (t *TorrentFile) BuildTracekerURL(peerID [20]byte, port uint16) (string, er
 	return trackerURL.String(), nil
 }
 
-func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) error {
+func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]Peer, error) {
 	requestUrl, err := t.BuildTracekerURL(peerID, port)
 	if err != nil {
 		panic(err)
@@ -52,16 +52,21 @@ func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) error {
 	c := &http.Client{Timeout: 15 * time.Second}
 	resp, err := c.Get(requestUrl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	trackerResponse := &BencodeTrackerResp{}
 	err = bencode.Unmarshal(resp.Body, trackerResponse)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	defer resp.Body.Close()
 
-	return nil
+	peers, err := Unmarshall([]byte(trackerResponse.Peers))
+	if err != nil {
+		return nil, err
+	}
+
+	return peers, nil
 }

@@ -38,4 +38,13 @@ func main() {
 	copy(peerId[:], []byte("gokul656"))
 
 	bencode.Print()
+
+	torrentFile, _ := bencode.ToTorrentFile()
+	peerList, err := torrentFile.getPeerList(peerId, 2323)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("# Peers")
+	fmt.Printf("\tCount         : %v\n", len(peerList))
 }
