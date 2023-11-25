@@ -39,14 +39,13 @@ func (t *TorrentFile) BuildTracekerURL(peerID [20]byte, port uint16) (string, er
 		"left":       []string{strconv.Itoa(t.Length)},
 	}
 	trackerURL.RawQuery = params.Encode()
-
 	return trackerURL.String(), nil
 }
 
 func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]Peer, error) {
 	requestUrl, err := t.BuildTracekerURL(peerID, port)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	c := &http.Client{Timeout: 15 * time.Second}
@@ -63,10 +62,5 @@ func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]Peer, error) 
 
 	defer resp.Body.Close()
 
-	peers, err := Unmarshall([]byte(trackerResponse.Peers))
-	if err != nil {
-		return nil, err
-	}
-
-	return peers, nil
+	return UnmarshallPeers([]byte(trackerResponse.Peers))
 }

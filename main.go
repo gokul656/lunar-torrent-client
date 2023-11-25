@@ -1,9 +1,14 @@
 package main
 
 import (
+	"crypto/rand"
 	"flag"
 	"fmt"
+	"log"
+	"net"
 	"os"
+	"sync"
+	"time"
 )
 
 var targetFile = flag.String("t", "", "Path to torrent file")
@@ -47,4 +52,29 @@ func main() {
 
 	fmt.Println("# Peers")
 	fmt.Printf("\tCount         : %v\n", len(peerList))
+
+	peerID := [20]byte{}
+	rand.Read(peerID[:])
+
+	var wg sync.WaitGroup
+	for _, peer := range peerList {
+		wg.Add(1)
+		go func(peer Peer, wg *sync.WaitGroup) {
+			defer wg.Done()
+			conn, err := net.DialTimeout("tcp", peer.String(), time.Second*3)
+			if err != nil {
+				return
+			}
+
+			_, err = InitiateHandshake(conn, peerID, torrentFile.InfoHash)
+			if err != nil {
+				return
+			}
+
+			log.Println("Handshake success with", peer.IP.String())
+			defer conn.Close()
+		}(peer, &wg)
+	}
+
+	wg.Wait()
 }

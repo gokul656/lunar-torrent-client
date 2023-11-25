@@ -12,15 +12,14 @@ type Peer struct {
 	Port uint16
 }
 
-func Unmarshall(byteBuffer []byte) ([]Peer, error) {
+func UnmarshallPeers(byteBuffer []byte) ([]Peer, error) {
 	const peerSize = 6 // 4 bytes for IP and 2 bytes for port
 	peerCount := len(byteBuffer) / peerSize
-	peers := make([]Peer, peerCount)
-
 	if len(byteBuffer)%peerSize != 0 {
-		return nil, errors.New("invalid peer")
+		return nil, errors.New("malformed peer list")
 	}
 
+	peers := make([]Peer, peerCount)
 	for i := 0; i < peerCount; i++ {
 		offset := i * peerSize
 		peers[i] = Peer{
@@ -32,6 +31,7 @@ func Unmarshall(byteBuffer []byte) ([]Peer, error) {
 	return peers, nil
 }
 
-func Address(peer Peer) string {
-	return net.JoinHostPort(peer.IP.String(), strconv.Itoa(int(peer.Port)))
+// overriden method
+func (p Peer) String() string {
+	return net.JoinHostPort(p.IP.String(), strconv.Itoa(int(p.Port)))
 }
