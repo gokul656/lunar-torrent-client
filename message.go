@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 )
 
@@ -33,7 +32,6 @@ func ReadMessage(conn io.Reader) (*Message, error) {
 	}
 
 	length := binary.BigEndian.Uint32(lengthBuf)
-	fmt.Println("Length of message", length)
 
 	msgBuf := make([]byte, length)
 	_, err = io.ReadFull(conn, msgBuf)

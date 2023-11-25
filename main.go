@@ -74,7 +74,7 @@ func main() {
 
 			log.Println("Handshake success with", peer.IP.String())
 
-			// wait for server to get ready
+			// wait for server to get ready (i.e) to receive unchoked msg
 			msg, err := ReadMessage(conn)
 			if err != nil {
 				return
