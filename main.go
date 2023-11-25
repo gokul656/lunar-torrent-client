@@ -65,6 +65,7 @@ func main() {
 			if err != nil {
 				return
 			}
+			defer conn.Close()
 
 			_, err = InitiateHandshake(conn, peerID, torrentFile.InfoHash)
 			if err != nil {
@@ -72,7 +73,14 @@ func main() {
 			}
 
 			log.Println("Handshake success with", peer.IP.String())
-			defer conn.Close()
+
+			// wait for server to get ready
+			msg, err := ReadMessage(conn)
+			if err != nil {
+				return
+			}
+
+			_ = msg
 		}(peer, &wg)
 	}
 
