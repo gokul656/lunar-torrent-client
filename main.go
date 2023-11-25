@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
 	"flag"
 	"fmt"
 	"log"
@@ -54,8 +53,9 @@ func main() {
 	fmt.Printf("\tCount         : %v\n", len(peerList))
 
 	peerID := [20]byte{}
-	rand.Read(peerID[:])
+	copy(peerID[:], []byte("lunar-torrent-client"))
 
+	fmt.Println(peerID)
 	var wg sync.WaitGroup
 	for _, peer := range peerList {
 		wg.Add(1)
