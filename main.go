@@ -55,7 +55,6 @@ func main() {
 	peerID := [20]byte{}
 	copy(peerID[:], []byte("lunar-torrent-client"))
 
-	fmt.Println(peerID)
 	var wg sync.WaitGroup
 	for _, peer := range peerList {
 		wg.Add(1)
