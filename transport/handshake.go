@@ -60,7 +60,7 @@ func Read(r io.Reader) (*Handshake, error) {
 
 	pstrlen := int(lengthBuf[0])
 	if pstrlen == 0 {
-		err := fmt.Errorf("pstrlen cannot be 0")
+		err := fmt.Errorf("pstr len cannot be 0")
 		return nil, err
 	}
 

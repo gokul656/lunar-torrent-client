@@ -1,4 +1,4 @@
-module github.com/gokul656/gtorrent
+module github.com/gokul656/lunar-torrent
 
 go 1.21.4
 

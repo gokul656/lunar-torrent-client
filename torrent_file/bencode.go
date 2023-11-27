@@ -1,4 +1,4 @@
-package main
+package torrent_file
 
 import (
 	"bytes"
@@ -128,7 +128,7 @@ func (bi *BencodeInfo) hash() ([20]byte, error) {
 	return sha1.Sum(byteBuffer.Bytes()), nil
 }
 
-func parseBencodeFile(file string) (*BencodeTorrent, error) {
+func parseFile(file string) (*BencodeTorrent, error) {
 	reader, err := os.Open(file)
 	if err != nil {
 		return nil, err

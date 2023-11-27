@@ -21,7 +21,7 @@ const (
 
 type Message struct {
 	ID      messageID
-	Payload []byte
+	Payload Bitfield
 }
 
 func ReadMessage(conn io.Reader) (*Message, error) {
@@ -45,4 +45,9 @@ func ReadMessage(conn io.Reader) (*Message, error) {
 	}
 
 	return msg, nil
+}
+
+func (m *Message) Serialize() []byte {
+	buf := make([]byte, 4)
+	return buf
 }

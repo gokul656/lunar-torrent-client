@@ -1,4 +1,4 @@
-package main
+package peer
 
 import (
 	"encoding/binary"
@@ -12,7 +12,7 @@ type Peer struct {
 	Port uint16
 }
 
-func UnmarshallPeers(byteBuffer []byte) ([]Peer, error) {
+func Unmarshall(byteBuffer []byte) ([]Peer, error) {
 	const peerSize = 6 // 4 bytes for IP and 2 bytes for port
 	peerCount := len(byteBuffer) / peerSize
 	if len(byteBuffer)%peerSize != 0 {

@@ -1,4 +1,4 @@
-package main
+package torrent_file
 
 import (
 	"net/http"
@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gokul656/lunar-torrent/peer"
 	"github.com/jackpal/bencode-go"
 )
 
@@ -23,7 +24,7 @@ type TorrentFile struct {
 	Name        string
 }
 
-func (t *TorrentFile) BuildTracekerURL(peerID [20]byte, port uint16) (string, error) {
+func (t *TorrentFile) buildTracekerURL(peerID [20]byte, port uint16) (string, error) {
 	trackerURL, err := url.Parse(t.Announce)
 	if err != nil {
 		return "", err
@@ -42,8 +43,8 @@ func (t *TorrentFile) BuildTracekerURL(peerID [20]byte, port uint16) (string, er
 	return trackerURL.String(), nil
 }
 
-func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]Peer, error) {
-	requestUrl, err := t.BuildTracekerURL(peerID, port)
+func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]peer.Peer, error) {
+	requestUrl, err := t.buildTracekerURL(peerID, port)
 	if err != nil {
 		return nil, err
 	}
@@ -62,5 +63,9 @@ func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]Peer, error) 
 
 	defer resp.Body.Close()
 
-	return UnmarshallPeers([]byte(trackerResponse.Peers))
+	return peer.Unmarshall([]byte(trackerResponse.Peers))
+}
+
+func (tf *TorrentFile) Download(dst string) error {
+	return nil
 }
