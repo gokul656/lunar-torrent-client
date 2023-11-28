@@ -1,26 +1,52 @@
-package main
+package transport
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 )
 
-type messageID uint8
+type MessageID uint8
+
+func (m MessageID) Name() string {
+	switch m {
+	case 0:
+		return "choke"
+	case 1:
+		return "unchoke"
+	case 2:
+		return "intrested"
+	case 3:
+		return "not-intrested"
+	case 4:
+		return "have"
+	case 5:
+		return "bitfield"
+	case 6:
+		return "request"
+	case 7:
+		return "piece"
+	case 8:
+		return "cancel"
+	default:
+		return fmt.Sprintf("invalid message ID %d", m)
+	}
+}
 
 const (
-	MsgChoke         messageID = 0
-	MsgUnchoke       messageID = 1
-	MsgInterested    messageID = 2
-	MsgNotInterested messageID = 3
-	MsgHave          messageID = 4
-	MsgBitfield      messageID = 5
-	MsgRequest       messageID = 6
-	MsgPiece         messageID = 7
-	MsgCancel        messageID = 8
+	MsgChoke         MessageID = 0
+	MsgUnchoke       MessageID = 1
+	MsgInterested    MessageID = 2
+	MsgNotInterested MessageID = 3
+	MsgHave          MessageID = 4
+	MsgBitfield      MessageID = 5
+	MsgRequest       MessageID = 6
+	MsgPiece         MessageID = 7
+	MsgCancel        MessageID = 8
 )
 
 type Message struct {
-	ID      messageID
+	ID      MessageID
 	Payload Bitfield
 }
 
@@ -40,7 +66,7 @@ func ReadMessage(conn io.Reader) (*Message, error) {
 	}
 
 	msg := &Message{
-		ID:      messageID(msgBuf[0]),
+		ID:      MessageID(msgBuf[0]),
 		Payload: msgBuf[1:],
 	}
 
@@ -48,6 +74,11 @@ func ReadMessage(conn io.Reader) (*Message, error) {
 }
 
 func (m *Message) Serialize() []byte {
-	buf := make([]byte, 4)
+	length := uint32(len(m.Payload) + 1)
+	buf := make([]byte, 4+length)
+	binary.BigEndian.PutUint32(buf[0:4], length)
+	buf[5] = byte(m.ID)
+	copy(buf[6:], m.Payload)
+
 	return buf
 }

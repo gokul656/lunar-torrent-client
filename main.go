@@ -35,7 +35,8 @@ func main() {
 		panic(err)
 	}
 
-	tf.Download("out/")
+	tf.IntiateDownload("out/")
+
 	// // Parse torrent file
 	// bencode, err := parseBencodeFile(*targetFile)
 	// if err != nil {

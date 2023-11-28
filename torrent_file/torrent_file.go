@@ -6,11 +6,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gokul656/lunar-torrent/client"
 	"github.com/gokul656/lunar-torrent/peer"
 	"github.com/jackpal/bencode-go"
 )
 
-type BencodeTrackerResp struct {
+type BencodeTrackerResponse struct {
 	Interval int    `bencode:"interval"`
 	Peers    string `bencode:"peers"`
 }
@@ -43,29 +44,47 @@ func (t *TorrentFile) buildTracekerURL(peerID [20]byte, port uint16) (string, er
 	return trackerURL.String(), nil
 }
 
-func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]peer.Peer, error) {
-	requestUrl, err := t.buildTracekerURL(peerID, port)
+func (tf *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]peer.Peer, error) {
+
+	// to retrive peer list
+	announceURL, err := tf.buildTracekerURL(peerID, 2032)
 	if err != nil {
-		return nil, err
+		return []peer.Peer{}, err
 	}
 
-	c := &http.Client{Timeout: 15 * time.Second}
-	resp, err := c.Get(requestUrl)
+	// announcing about our the prescence & retrieving peer list
+	client := &http.Client{Timeout: time.Second * 10}
+	responseBuf, err := client.Get(announceURL)
 	if err != nil {
-		return nil, err
+		return []peer.Peer{}, err
 	}
 
-	trackerResponse := &BencodeTrackerResp{}
-	err = bencode.Unmarshal(resp.Body, trackerResponse)
-	if err != nil {
-		return nil, err
-	}
+	defer responseBuf.Body.Close()
 
-	defer resp.Body.Close()
+	trackerResponse := &BencodeTrackerResponse{}
+	err = bencode.Unmarshal(responseBuf.Body, trackerResponse)
+	if err != nil {
+		return []peer.Peer{}, err
+	}
 
 	return peer.Unmarshall([]byte(trackerResponse.Peers))
 }
 
-func (tf *TorrentFile) Download(dst string) error {
-	return nil
+func (tf *TorrentFile) IntiateDownload(dst string) error {
+	peerID := [20]byte{}
+	copy(peerID[:], []byte("lunar-torrent-client"))
+
+	peerList, err := tf.getPeerList(peerID, 2432)
+	if err != nil {
+		return err
+	}
+
+	torrent := &client.Torrent{
+		PeerID:     peerID,
+		Peers:      peerList,
+		InfoHash:   tf.InfoHash,
+		PiecesHash: tf.PicesHash,
+	}
+
+	return torrent.Download()
 }
