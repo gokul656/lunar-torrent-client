@@ -30,7 +30,7 @@ func main() {
 			fmt.Println("\nPanic due to,", r)
 		}
 	}()
-	fmt.Println("Target :", *targetFile)
+	fmt.Println("\nTarget :", *targetFile)
 
 	// Parse torrent file
 	bencode, err := parseBencodeFile(*targetFile)
@@ -44,24 +44,29 @@ func main() {
 	bencode.Print()
 
 	torrentFile, _ := bencode.ToTorrentFile()
-	peerList, err := torrentFile.getPeerList(peerId, 2323)
+	peerList, err := torrentFile.GetPeerList(peerId, 6969)
 	if err != nil {
-		panic(err)
+		log.Fatalln("unable to fetch peer list", err)
 	}
 
 	fmt.Println("# Peers")
-	fmt.Printf("\tCount         : %v\n", len(peerList))
+	fmt.Printf("\tCount         : %v\n\n", len(peerList))
 
 	peerID := [20]byte{}
 	copy(peerID[:], []byte("lunar-torrent-client"))
+
+	// FIXME : Intentional return
+	return
 
 	var wg sync.WaitGroup
 	for _, peer := range peerList {
 		wg.Add(1)
 		go func(peer Peer, wg *sync.WaitGroup) {
 			defer wg.Done()
+
 			conn, err := net.DialTimeout("tcp", peer.String(), time.Second*3)
 			if err != nil {
+				fmt.Printf("err: %v\n", err)
 				return
 			}
 			defer conn.Close()
@@ -76,6 +81,7 @@ func main() {
 			// wait for server to get ready (i.e) to receive unchoked msg
 			msg, err := ReadMessage(conn)
 			if err != nil {
+				fmt.Printf("err: %v\n", err)
 				return
 			}
 

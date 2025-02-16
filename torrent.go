@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -8,6 +11,8 @@ import (
 
 	"github.com/jackpal/bencode-go"
 )
+
+type ProtocolHandler func(requestURL string) (*BencodeTrackerResp, error)
 
 type BencodeTrackerResp struct {
 	Interval int    `bencode:"interval"`
@@ -24,6 +29,7 @@ type TorrentFile struct {
 }
 
 func (t *TorrentFile) BuildTracekerURL(peerID [20]byte, port uint16) (string, error) {
+	fmt.Printf("t.Announce: %v\n", t.Announce)
 	trackerURL, err := url.Parse(t.Announce)
 	if err != nil {
 		return "", err
@@ -42,15 +48,22 @@ func (t *TorrentFile) BuildTracekerURL(peerID [20]byte, port uint16) (string, er
 	return trackerURL.String(), nil
 }
 
-func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]Peer, error) {
-	requestUrl, err := t.BuildTracekerURL(peerID, port)
+func (t *TorrentFile) GetPeerList(peerID [20]byte, port uint16) ([]Peer, error) {
+	handler := NewUDPHandler(t.Announce, port, peerID)
+	peers, err := handler.GetPeerList()
 	if err != nil {
 		return nil, err
 	}
 
+	return peers, nil
+}
+
+// FIXME : Optimiza handlers
+func httpHandler(requestURL string) (*BencodeTrackerResp, error) {
 	c := &http.Client{Timeout: 15 * time.Second}
-	resp, err := c.Get(requestUrl)
+	resp, err := c.Get(requestURL)
 	if err != nil {
+		log.Println("unable to get peer list from URL", requestURL, err)
 		return nil, err
 	}
 
@@ -62,5 +75,16 @@ func (t *TorrentFile) getPeerList(peerID [20]byte, port uint16) ([]Peer, error) 
 
 	defer resp.Body.Close()
 
-	return UnmarshallPeers([]byte(trackerResponse.Peers))
+	return trackerResponse, nil
+}
+
+func udpHandler(requestURL string) (*BencodeTrackerResp, error) {
+	conn, err := net.Dial("udp", requestURL)
+	if err != nil {
+		return nil, err
+	}
+
+	defer conn.Close()
+
+	return nil, err
 }
